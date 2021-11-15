@@ -1,0 +1,117 @@
+import imagezmq
+import os
+from pathlib import Path
+import sys
+import argparse
+import sys
+from pathlib import Path
+import socket
+import zmq
+import cv2
+import numpy as np
+from PIL import Image
+import torch
+import torch.backends.cudnn as cudnn
+#sender = imagezmq.ImageSender(connect_to="tcp://MDPGrp20Pi:5555")
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]  # YOLOv5 root directory
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+img_name=0
+path = os.getcwd()
+print(path)
+image_hub = imagezmq.ImageHub()
+aa = socket.gethostname()
+print(aa)
+templabel = 'nothing'
+paths = []
+apath = ''
+countpic = 0
+combined = np.zeros((225,400,3),np.uint8)
+#context = zmq.Context()
+#socket = context.socket(zmq.SUB)
+#socket.bind("tcp://*:6666")
+check=0
+while check==0:
+    rpi_name, image = image_hub.recv_image()
+    cv2.imwrite("C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master\RPi/image_processing_server/frames/rawcompiled/RAW{}.jpg".format(img_name),image)
+    img_name+=1
+    print("Started")
+    os.system("C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master/RPi/yolov5-master/detect.py --source C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master/RPi/image_processing_server/frames/raw/Test.jpg --weights C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master/RPi/yolov5-master/best.pt --img 512")
+    Imagename ="C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master/RPi/image_processing_server/frames/raw/Test.jpg"
+    cv2.imshow(rpi_name, image)
+    cv2.imwrite(Imagename,image)
+    cv2.waitKey(1)
+    image_hub.send_reply(b'OK')
+    file1 = open("MyFile.txt",'r')
+    loaded = str(file1.readlines())[2:-2]
+    spath = loaded.split(",")
+    apath = spath[1][:-2].replace(r"\\", "/")
+    if countpic%2 != 0:
+        paths.append(apath+"/Test.jpg")
+
+
+
+    file1.close()
+   # print(socket.recv())
+    os.system("pscp -pw raspberry C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master/RPi/image_processing_server/MyFile.txt pi@192.168.20.20:/home/pi")
+    #print(paths)
+    #img = cv2.imread(apath+"/Test.jpg")
+    #cv2.imshow("testing",img)
+
+    #imgs = []
+    #for x in paths:
+     #   imgss = cv2.imread(apath + "/Test.jpg")
+      #  imgs.append(imgss)
+    if countpic % 2 != 0:
+        imagesss=[Image.open(x) for x in paths]
+        widths, heights = zip(*(i.size for i in imagesss))
+
+        total_width = sum(widths)
+        max_height = max(heights)
+
+        new_im = Image.new('RGB',(total_width, max_height))
+        x_offset = 0
+        y_offset = 0
+        counting = 0
+        for im in imagesss:
+            '''if counting < 3:
+                new_im.paste(im,(x_offset,y_offset))
+                x_offset += im.size[0]
+                print("Xxxxxxxxxxxxxxxxxxxx: " + str(counting))
+            else:
+                y_offset += im.size[1]
+                x_offset = 0
+                new_im.paste(im, (x_offset, y_offset))
+            counting+=1'''
+            new_im.paste(im, (x_offset, y_offset))
+            x_offset += im.size[0]
+        new_im.save('C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master/RPi/image_processing_server/ABC.jpg')
+    countpic += 1
+    os.system("pscp -pw raspberry C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master/RPi/image_processing_server/ABC.jpg pi@192.168.20.20:/home/pi")
+    '''if countpic2 % 2 != 0:
+        imagessss=[Image.open(x) for x in pathss]
+        widths, heights = zip(*(i.size for i in imagessss))
+
+        total_width = sum(widths)
+        max_height = max(heights)
+
+        new_im = Image.new('RGB',(total_width, max_height))
+        x_offset = 0
+        y_offset = 0
+        counting = 0
+        for im in imagesss:
+            if counting < 3:
+                new_im.paste(im,(x_offset,y_offset))
+                x_offset += im.size[0]
+                print("Xxxxxxxxxxxxxxxxxxxx: " + str(counting))
+            else:
+                y_offset += im.size[1]
+                x_offset = 0
+                new_im.paste(im, (x_offset, y_offset))
+            counting+=1
+            new_im.paste(im, (x_offset, y_offset))
+            x_offset += im.size[0]
+        new_im.save('C:/Users/Mark_/OneDrive/Desktop/MDP_Integrated-master/RPi/image_processing_server/ABC.jpg')
+    countpic2 += 1'''
+
